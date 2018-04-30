@@ -11,7 +11,7 @@ clear, close, clc, path(pathdef);
 SinPath      = [pwd,'\SincalGrid\'     ];
 GridInfoPath = [pwd,'\European_LV_CSV\'];
 SinName      = 'IEEE_LV_EU_TestFeeder';
-store_orig   = false;                % Option to save original(initial) grid
+store_orig   = true;                % Option to save original(initial) grid
 
 %% Standard Path Setup
 
