@@ -121,7 +121,7 @@ LoadInput.Node       =  ...
 LoadInput.LengthY    = - 0.0025  * ones(size(LoadInput,1),1);
 LoadInput.SymbolSize = 25        * ones(size(LoadInput,1),1);
 LoadInput.P          = 2 * 10^-3 * ones(size(LoadInput,1),1);   % MW
-LoadInput.cosphi     = 0.95      * ones(size(LoadInput,1),1);   % Temp 
+LoadInput.cosphi     = 0.95      * ones(size(LoadInput,1),1);   % ... 
 LoadInput.Flag_Lf    = 11        * ones(size(LoadInput,1),1);   % Temp (P, cosphi)
 LoadInput.Flag_Cur   = zeros(size(LoadInput,1),1);              % Not Marked (optional)
 
