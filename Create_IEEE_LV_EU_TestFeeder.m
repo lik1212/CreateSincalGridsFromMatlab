@@ -12,6 +12,7 @@ SinPath      = [pwd,'\SincalGrid\'     ];
 GridInfoPath = [pwd,'\European_LV_CSV\'];
 SinName      = 'IEEE_LV_EU_TestFeeder';
 store_orig   = true;                % Option to save original(initial) grid
+add_DCInfeed = false;
 
 %% Standard Path Setup
 
@@ -44,8 +45,14 @@ warning('on','MATLAB:table:ModifiedAndSavedVarnames')
 
 %% TODO -> Reduce num of Nodes
 
-% [Buscoords, Lines]        = ReduceNumNodes(Buscoords, Lines);
-% [Buscoords, Lines, Loads] = CheckBuscoords(Buscoords, Lines, Loads);
+[Buscoords, Lines]        = ReduceNumNodes(Buscoords, Lines);
+[Buscoords, Lines, Loads] = CheckBuscoords(Buscoords, Lines, Loads);
+[Loads]                   = Loads2allPhase(Loads);
+[Buscoords, Lines]        = DelIsolatedElements(Buscoords, Lines);
+[Buscoords, Lines]        = MergeUnnecessaryElements(Buscoords, Lines);
+[Buscoords, Lines]        = CorrectionAssumption(Buscoords, Lines);
+
+add_DCInfeed = true;
 
 %%
 
@@ -105,6 +112,8 @@ for k_LCod = 1 : size(LineCodes,1)
     LineInput.r0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.R0(k_LCod);
     LineInput.x0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.X0(k_LCod);
     LineInput.c0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.C0(k_LCod);
+    LineInput.X0_X1 = LineInput.x0 ./ LineInput.x;
+    LineInput.R0_R1 = LineInput.r0 ./ LineInput.r;
 end
     
 %% Function to add Line Files
@@ -120,8 +129,8 @@ LoadInput.Node       =  ...
     'N',num2str(Loads.Bus))),' ','');             % To check later
 LoadInput.LengthY    = - 0.0025  * ones(size(LoadInput,1),1);
 LoadInput.SymbolSize = 25        * ones(size(LoadInput,1),1);
-LoadInput.P          = 2 * 10^-3 * ones(size(LoadInput,1),1);   % MW
-LoadInput.cosphi     = 0.95      * ones(size(LoadInput,1),1);   % ... 
+LoadInput.P          = 2 * 10^-3 * ones(size(LoadInput,1),1);   % Temp
+LoadInput.cosphi     = 0.95      * ones(size(LoadInput,1),1);   % Temp 
 LoadInput.Flag_Lf    = 11        * ones(size(LoadInput,1),1);   % Temp (P, cosphi)
 LoadInput.Flag_Cur   = zeros(size(LoadInput,1),1);              % Not Marked (optional)
 
@@ -134,6 +143,19 @@ LoadInput.Flag_Terminal(strcmp(Loads.phases,'C')) = 3;
 %% Function to add Load Files
 
 Mat2Sin_AddLoad(LoadInput, SinName, SinPath)
+
+%%  Prepare and add new (to be addes) DCInfeeders (Optional)
+
+if add_DCInfeed
+    DCIInput = LoadInput;
+    DCIInput.Name          = strrep(DCIInput.Name,'LOAD','PV'); % Adjust names
+    DCIInput.LengthY       = - DCIInput.LengthY;                % DC symbol up
+    DCIInput.SymbolType(:) = 193;                               % PV system symbol
+    DCIInput.SymbolDef(:)  = 2;                                 % PV system symbol
+    DCIInput.Flag_Lf       = [];
+    DCIInput.cosphi        = [];
+    Mat2Sin_AddDCI(DCIInput, SinName, SinPath);
+end
 
 %% Prepare new (to be added) TwoWindingTransformer (TR2W)
 
