@@ -11,7 +11,7 @@ clear, close, clc, path(pathdef);
 SinPath      = [pwd,'\SincalGrid\'     ];
 GridInfoPath = [pwd,'\European_LV_CSV\'];
 SinName      = 'IEEE_LV_EU_TestFeeder';
-store_orig   = true;                % Option to save original(initial) grid
+store_orig   = false;                % Option to save original(initial) grid
 add_DCInfeed = false;
 
 %% Standard Path Setup
@@ -64,6 +64,20 @@ Transformer.bus1 = 0;
 
 Source = cell2table(Source.Var2','VariableNames',Source.Var1');
 
+%% Assumptions for I_th
+
+LineCodes.Ith(:) = 0;
+LineCodes.Ith(ismember(LineCodes.Name,'4c_.35'))       = 0.150; % No Type, but 35
+LineCodes.Ith(ismember(LineCodes.Name,'4c_185'))       = 0.322; % NAKLEY 185
+LineCodes.Ith(ismember(LineCodes.Name,'4c_.1'))        = 0.213; % NKLEY 70
+LineCodes.Ith(ismember(LineCodes.Name,'4c_95_SAC_XC')) = 0.203; % NAKLEY 95
+LineCodes.Ith(ismember(LineCodes.Name,'4c_70'))        = 0.236; % NA2XSY 70
+LineCodes.Ith(ismember(LineCodes.Name,'4c_.06'))       = 0.236; % NA2XSY 70       
+LineCodes.Ith(ismember(LineCodes.Name,'35_SAC_XSC'))   = 0.136; % NA2XY 35
+LineCodes.Ith(ismember(LineCodes.Name,'2c_16'))        = 0.102; % NYY 16
+LineCodes.Ith(ismember(LineCodes.Name,'2c_.0225'))     = 0.135; % F-AL 25
+LineCodes.Ith(ismember(LineCodes.Name,'2c_.007'))      = 0.059; % NYY 4
+
 %% Prepare new (to be added) Nodes 
 
 Page_XRange = [0 0.420];
@@ -106,12 +120,13 @@ LineInput.Flag_Input    = 7 * ones(size(LineInput,1),1);    % with zero-phase
 LineInput.Flag_Z0_Input = 2 * ones(size(LineInput,1),1);    % zero-phase as r0 and x0
 LineInput.Flag_Cur      = ones(size(LineInput,1),1);     	% Marked (optional)
 for k_LCod = 1 : size(LineCodes,1)
-    LineInput.r (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.R1(k_LCod);
-    LineInput.x (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.X1(k_LCod);
-    LineInput.c (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.C1(k_LCod);
-    LineInput.r0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.R0(k_LCod);
-    LineInput.x0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.X0(k_LCod);
-    LineInput.c0(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.C0(k_LCod);
+    LineInput.r  (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.R1 (k_LCod);
+    LineInput.x  (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.X1 (k_LCod);
+    LineInput.c  (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.C1 (k_LCod);
+    LineInput.r0 (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.R0 (k_LCod);
+    LineInput.x0 (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.X0 (k_LCod);
+    LineInput.c0 (strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.C0 (k_LCod);
+    LineInput.Ith(strcmp(Lines.LineCode,LineCodes.Name{k_LCod})) = LineCodes.Ith(k_LCod);
     LineInput.X0_X1 = LineInput.x0 ./ LineInput.x;
     LineInput.R0_R1 = LineInput.r0 ./ LineInput.r;
 end
